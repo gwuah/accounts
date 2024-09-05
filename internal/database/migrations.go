@@ -19,7 +19,7 @@ var (
 		),
 		execsql(
 			"create_accounts",
-			`create table if not exists CREATE TABLE accounts (
+			`create table if not exists accounts (
 				id SERIAL PRIMARY KEY,
 				user_id INTEGER NOT NULL,
 				account_number INTEGER UNIQUE NOT NULL,
@@ -30,7 +30,7 @@ var (
 		),
 		execsql(
 			"create_transactions",
-			`create table if not exists CREATE TABLE transactions (
+			`create table if not exists transactions (
 				id SERIAL PRIMARY KEY,
 				reference VARCHAR(100) UNIQUE NOT NULL,
 				created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -39,7 +39,7 @@ var (
 		),
 		execsql(
 			"create_transaction_lines",
-			`create table if not exists CREATE TABLE transaction_lines (
+			`create table if not exists transaction_lines (
 				id SERIAL PRIMARY KEY,
 				transaction_id INTEGER NOT NULL,
 				reference VARCHAR(100) NOT NULL,

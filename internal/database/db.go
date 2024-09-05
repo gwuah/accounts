@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/gwuah/accounts/internal/config"
+	_ "github.com/lib/pq" // Import the PostgreSQL driver
 	"github.com/lopezator/migrator"
 )
 
