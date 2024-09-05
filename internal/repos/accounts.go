@@ -26,7 +26,7 @@ func (r *accountsRepo) GetTx(ctx context.Context) (*sql.Tx, error) {
 }
 
 func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) ([]*models.Account, error) {
-	stmt, err := tx.Prepare("select id, user_id, account_number, created_at, update_at from accounts where user_id=?")
+	stmt, err := tx.Prepare("select id, user_id, account_number, created_at, update_at from accounts where user_id=$1;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement. %w", err)
 	}
@@ -59,7 +59,7 @@ func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) 
 }
 
 func (r *accountsRepo) Create(ctx context.Context, tx *sql.Tx, a *models.Account) error {
-	query := `insert into accounts (user_id, account_number) values (?, ?);`
+	query := `insert into accounts (user_id, account_number) values ($1, $2);`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		return err

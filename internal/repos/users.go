@@ -26,7 +26,7 @@ func (r *usersRepo) GetTx(ctx context.Context) (*sql.Tx, error) {
 }
 
 func (r *usersRepo) GetByID(ctx context.Context, tx *sql.Tx, userID int) (*models.User, error) {
-	stmt, err := tx.Prepare("select id, email, created_at, update_at from users where id=?")
+	stmt, err := tx.Prepare("select id, email, created_at, update_at from users where id=$1;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement. %w", err)
 	}
@@ -59,7 +59,7 @@ func (r *usersRepo) GetByID(ctx context.Context, tx *sql.Tx, userID int) (*model
 }
 
 func (r *usersRepo) Create(ctx context.Context, tx *sql.Tx, u *models.User) error {
-	query := `insert into users (email) values (?);`
+	query := `insert into users (email) values ($1);`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		return err

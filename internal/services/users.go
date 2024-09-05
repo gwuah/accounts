@@ -14,7 +14,7 @@ import (
 	"github.com/gwuah/accounts/internal/models"
 )
 
-type userRepository interface {
+type UserRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	Create(ctx context.Context, tx *sql.Tx, u *models.User) error
 	GetByID(ctx context.Context, tx *sql.Tx, userID int) (*models.User, error)
@@ -62,7 +62,7 @@ func writeOk(w http.ResponseWriter, data map[string]interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func createUser(global *slog.Logger, userRepo userRepository) http.HandlerFunc {
+func createUser(global *slog.Logger, userRepo UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := global.With("entity", "users")
 
@@ -106,7 +106,7 @@ func createUser(global *slog.Logger, userRepo userRepository) http.HandlerFunc {
 	}
 }
 
-func findUser(global *slog.Logger, userRepo userRepository, accountRepo accountRepository) http.HandlerFunc {
+func findUser(global *slog.Logger, userRepo UserRepository, accountRepo AccountRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := global.With("entity", "users")
 		id := mux.Vars(r)["id"]
@@ -135,7 +135,7 @@ func findUser(global *slog.Logger, userRepo userRepository, accountRepo accountR
 	}
 }
 
-func AddUserRoutes(logger *slog.Logger, r *mux.Router, accountRepo accountRepository, userRepo userRepository) {
+func AddUserRoutes(logger *slog.Logger, r *mux.Router, accountRepo AccountRepository, userRepo UserRepository) {
 	r.Methods("GET").Path("/users/{id}").HandlerFunc(findUser(logger, userRepo, accountRepo))
 	r.Methods("POST").Path("/users").HandlerFunc(createUser(logger, userRepo))
 }

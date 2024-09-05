@@ -15,7 +15,7 @@ import (
 	"github.com/gwuah/accounts/internal/models"
 )
 
-type accountRepository interface {
+type AccountRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	Create(ctx context.Context, tx *sql.Tx, a *models.Account) error
 }
@@ -33,10 +33,10 @@ func (r createAccountRequest) validate() error {
 
 func createAccountNumber() string {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1e9))
-	return fmt.Sprintf("%d", n.Int64())
+	return fmt.Sprintf("%09d", n.Int64())
 }
 
-func createAccount(global *slog.Logger, accountRepo accountRepository, userRepo userRepository) http.HandlerFunc {
+func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := global.With("entity", "accounts")
 
@@ -84,6 +84,6 @@ func createAccount(global *slog.Logger, accountRepo accountRepository, userRepo 
 	}
 }
 
-func AddAccountRoutes(logger *slog.Logger, r *mux.Router, accountRepo accountRepository, userRepo userRepository) {
+func AddAccountRoutes(logger *slog.Logger, r *mux.Router, accountRepo AccountRepository, userRepo UserRepository) {
 	r.Methods("POST").Path("/accounts").HandlerFunc(createAccount(logger, accountRepo, userRepo))
 }

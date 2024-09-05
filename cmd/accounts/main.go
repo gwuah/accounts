@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net"
@@ -32,6 +33,29 @@ func requestLogger(next http.Handler, logger *slog.Logger) http.Handler {
 	})
 }
 
+func runSeeds(db *sql.DB) error {
+	// create 1 user for the bank
+	// create 1 account for the banks user
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("insert into users (email) values ($1) on conflict do nothing;", "primary@accounts.com")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec("insert into accounts (user_id, account_number) values ($1,$2) on conflict do nothing;", 1, "000000000")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func main() {
 	doneCh := make(chan os.Signal, 1)
 	signal.Notify(doneCh, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
@@ -50,6 +74,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = runSeeds(db.Instance())
+	if err != nil {
+		logger.Error("failed to run seeds", "err", err)
+		os.Exit(1)
+	}
 	ar := repos.NewAccount(logger, db.Instance())
 	ur := repos.NewUsers(logger, db.Instance())
 	// tr := repos.NewTransactions(logger, db.Instance())
