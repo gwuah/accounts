@@ -1,5 +1,10 @@
 # accounts
+A simple banking service
 
+# features
+- account creation
+- add money to account
+- transfer money between accounts
 
 # setup
 ### Docker (easier)
@@ -9,4 +14,6 @@
 
 ### Barebones
 1. Ensure you have a postgres db setup with the right dbname, user, password and sslmode setup.
-2. Run `DB_URL=<your_db_url> PORT=<your_port> go run cmd/accounts/main.go`
+2. Modify the Makefile in the project root, and set your `DB_URL` and `PORT`
+3. To run, `make run`
+3. To build `make build`

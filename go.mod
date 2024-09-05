@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/gorilla/mux v1.8.1
+	github.com/lopezator/migrator v0.3.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
 )

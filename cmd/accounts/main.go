@@ -14,7 +14,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gwuah/accounts/internal/config"
 	"github.com/gwuah/accounts/internal/database"
-	"github.com/gwuah/accounts/internal/models"
+	"github.com/gwuah/accounts/internal/repos"
+	"github.com/gwuah/accounts/internal/services"
 )
 
 func requestLogger(next http.Handler, logger *slog.Logger) http.Handler {
@@ -43,25 +44,15 @@ func main() {
 	cfg := config.New()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	db, err := database.NewPGConnection(cfg)
+	db, err := database.New(ctx, cfg, database.POSTGRES)
 	if err != nil {
 		logger.Error("failed to setup db connection", "err", err)
 		os.Exit(1)
 	}
 
-	if cfg.ENV == config.ENV_LOCAL {
-		db = db.Debug()
-	}
-
-	err = database.RunMigrations(db,
-		models.Account{},
-		models.Transaction{},
-		models.User{},
-	)
-	if err != nil {
-		logger.Error("failed to run migration", "err", err)
-		os.Exit(1)
-	}
+	ar := repos.NewAccount(logger, db.Instance())
+	ur := repos.NewUsers(logger, db.Instance())
+	// tr := repos.NewTransactions(logger, db.Instance())
 
 	r := mux.NewRouter()
 	r.Use(func(h http.Handler) http.Handler {
@@ -70,6 +61,10 @@ func main() {
 	r.Path("/").Methods(http.MethodGet).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
+
+	services.AddUserRoutes(logger, r, ar, ur)
+	services.AddAccountRoutes(logger, r, ar, ur)
+	// services.AddTransactionRoutes(logger, r, ar, ur, tr)
 
 	server := &http.Server{
 		Handler: r,
