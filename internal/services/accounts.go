@@ -2,17 +2,15 @@ package services
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
-	"math/big"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gwuah/accounts/internal/models"
+	"github.com/gwuah/accounts/pkg"
 )
 
 type AccountRepository interface {
@@ -26,15 +24,10 @@ type createAccountRequest struct {
 }
 
 func (r createAccountRequest) validate() error {
-	if r.UserID == 0 { // $1
+	if r.UserID == 0 {
 		return errors.New("'user_id' is required, can't be empty")
 	}
 	return nil
-}
-
-func createAccountNumber() string {
-	n, _ := rand.Int(rand.Reader, big.NewInt(1e9))
-	return fmt.Sprintf("%09d", n.Int64())
 }
 
 func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo UserRepository) http.HandlerFunc {
@@ -58,12 +51,12 @@ func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo 
 
 		account := &models.Account{
 			UserID:        req.UserID,
-			AccountNumber: createAccountNumber(),
+			AccountNumber: pkg.CreateAccountNumber(),
 		}
 
 		tx, err := userRepo.GetTx(r.Context())
 		if err != nil {
-			logger.Error("failed to acquire transaction", "err", err)
+			logger.Error("failed to acquire db transaction", "err", err)
 			writeInternalServer(w, "failed to create account")
 			return
 		}
@@ -71,13 +64,6 @@ func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo 
 		err = accountRepo.Create(r.Context(), tx, account)
 		if err != nil {
 			logger.Error("failed to create account", "err", err)
-			writeInternalServer(w, "failed to create account")
-			return
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			logger.Error("failed to commit tx", "err", err)
 			writeInternalServer(w, "failed to create account")
 			return
 		}
@@ -117,7 +103,7 @@ func getAccount(global *slog.Logger, accountRepo AccountRepository, userRepo Use
 			return
 		}
 
-		account.Balance = balance / 100
+		account.Balance = pkg.ConvertToUnit(balance)
 
 		writeOk(w, map[string]interface{}{
 			"account": account,

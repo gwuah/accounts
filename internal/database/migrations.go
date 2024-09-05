@@ -58,6 +58,9 @@ var (
 		execsql(
 			"disable_updates_on_transaction_lines", "CREATE RULE no_updates_on_transaction_lines AS ON UPDATE TO transaction_lines DO INSTEAD NOTHING;",
 		),
+		// execsql(
+		// 	"disable_deletes_on_transaction_lines", "CREATE RULE no_deletes_on_transaction_lines AS ON DELETE TO transaction_lines DO INSTEAD NOTHING;",
+		// ),
 	)
 	sqliteMigrations = migrator.Migrations()
 )

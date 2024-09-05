@@ -7,7 +7,6 @@ simple banking service
 - transfer money between accounts
 
 # todo
-- use money library to preserve precisions
 - write tests for core functionality
 - verify error messages and transaction usage
 
@@ -17,14 +16,16 @@ simple banking service
 - Store lowest form of values (cents)
 - Perform balance checks before transacting between accounts
 - Deposits debit genesis account, whose balance represents total risk.
+- Using currency USD with 2 decimal places of precision
+- Use transaction references to prevent duplicate transactions (idempotency key)
 
 # setup
-###### using docker (easier)
+#### using docker (easier)
 1. In the root of the project, run `docker compose up`
 2. This should boot up a local postgresql instance & an instance of the accounts service.
 3. Accounts service should be running on port 8080.
 
-### barebones (doable)
+#### barebones (doable)
 1. Ensure you have a postgres db setup with the right dbname, user, password and sslmode.
 2. Modify the Makefile in the project root, and set your `DB_URL` and `PORT`
 3. To run, `make run`

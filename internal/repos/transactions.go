@@ -62,7 +62,7 @@ func (r *transactionsRepo) GetBalance(ctx context.Context, tx *sql.Tx, accountID
 		return 0, fmt.Errorf("failed to scan response. %w", err)
 	}
 
-	total := 0
+	total := int64(0)
 	for _, line := range out {
 		if line.Purpose == string(CREDIT) {
 			total += line.Amount
@@ -72,7 +72,7 @@ func (r *transactionsRepo) GetBalance(ctx context.Context, tx *sql.Tx, accountID
 		}
 	}
 
-	return int64(total), nil
+	return total, nil
 }
 
 func (r *transactionsRepo) Create(ctx context.Context, tx *sql.Tx, t *models.Transaction) error {

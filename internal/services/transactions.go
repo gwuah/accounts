@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gwuah/accounts/internal/models"
 	"github.com/gwuah/accounts/internal/repos"
+	"github.com/gwuah/accounts/pkg"
 )
 
 const (
@@ -28,11 +29,11 @@ type TransactionRepository interface {
 }
 
 type createTransactionRequest struct {
-	From      string `json:"from"`
-	To        string `json:"to"`
-	Type      string `json:"type"`
-	Amount    int    `json:"amount"`
-	Reference string `json:"reference"`
+	From      string  `json:"from"`
+	To        string  `json:"to"`
+	Type      string  `json:"type"`
+	Amount    float64 `json:"amount"`
+	Reference string  `json:"reference"`
 }
 
 func (r createTransactionRequest) validate() error {
@@ -82,7 +83,7 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 
 		tx, err := transactionRepo.GetTx(r.Context())
 		if err != nil {
-			logger.Error("failed to acquire transaction", "err", err)
+			logger.Error("failed to acquire db transaction", "err", err)
 			writeInternalServer(w, "failed to create transaction")
 			return
 		}
@@ -125,7 +126,7 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 		}
 
 		// before performing this debit/credit, we need to verify if the origin account has enough balance for this transaction.
-		// we however exclude the genesis account, which has an account number of 0, since it's a special account that only hold risks.
+		// we however exclude the genesis account, which has an account number of 0000000000, since it's a special account that only hold risks.
 		if req.From != GenesisAccountNumber {
 			account := getAccountByAccountNumber(accounts, req.From)
 			balance, err := transactionRepo.GetBalance(r.Context(), tx, account.ID)
@@ -136,7 +137,7 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 				return
 			}
 
-			if balance < int64(req.Amount) {
+			if balance < pkg.ConvertToCents(req.Amount) {
 				tx.Rollback()
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(http.StatusUnprocessableEntity)
@@ -151,14 +152,14 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 		debit := models.TransactionLine{
 			TransactionID: transaction.ID,
 			AccountID:     getAccountByAccountNumber(accounts, req.From).ID,
-			Amount:        req.Amount * 100,
+			Amount:        pkg.ConvertToCents(req.Amount),
 			Purpose:       string(repos.DEBIT),
 		}
 
 		credit := models.TransactionLine{
 			TransactionID: transaction.ID,
 			AccountID:     getAccountByAccountNumber(accounts, req.To).ID,
-			Amount:        req.Amount * 100,
+			Amount:        pkg.ConvertToCents(req.Amount),
 			Purpose:       string(repos.CREDIT),
 		}
 
@@ -180,7 +181,7 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 
 		err = tx.Commit()
 		if err != nil {
-			logger.Error("failed to commit tx", "err", err)
+			logger.Error("failed to commit db transaction", "err", err)
 			writeInternalServer(w, "failed to create transaction")
 			return
 		}

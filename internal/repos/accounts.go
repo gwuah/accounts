@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/gwuah/accounts/internal/models"
 )
@@ -41,16 +42,32 @@ func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) 
 }
 
 func (r *accountsRepo) GetAccounts(ctx context.Context, tx *sql.Tx, accountNumbers []string) ([]*models.Account, error) {
-	// refactor: getAccounts should support multiple inputs, not just the first 2
-	stmt, err := tx.Prepare("select id, user_id, account_number, created_at, updated_at from accounts where account_number in ($1, $2);")
+	if len(accountNumbers) == 0 {
+		return nil, fmt.Errorf("no account numbers provided")
+	}
+
+	placeholders := make([]string, len(accountNumbers))
+	args := make([]interface{}, len(accountNumbers))
+
+	for i := range accountNumbers {
+		placeholders[i] = fmt.Sprintf("$%d", i+1) // SQL placeholders start at $1
+		args[i] = accountNumbers[i]
+	}
+
+	query := fmt.Sprintf(
+		"SELECT id, user_id, account_number, created_at, updated_at FROM accounts WHERE account_number IN (%s);",
+		strings.Join(placeholders, ","),
+	)
+
+	stmt, err := tx.Prepare(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare statement. %w", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, accountNumbers[0], accountNumbers[1])
+	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exec query. %w", err)
+		return nil, fmt.Errorf("failed to exec query: %w", err)
 	}
 
 	return getMany(rows)
@@ -81,14 +98,14 @@ func (r *accountsRepo) Create(ctx context.Context, tx *sql.Tx, a *models.Account
 	query := `insert into accounts (user_id, account_number) values ($1, $2) returning id, created_at, updated_at;`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to prepare statement. %w", err)
 	}
 	defer stmt.Close()
 
 	err = stmt.QueryRow(a.UserID, a.AccountNumber).Scan(&a.ID, &a.CreatedAt, &a.UpdatedAt)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to exec query: %w", err)
 	}
 
-	return err
+	return nil
 }
