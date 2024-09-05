@@ -17,3 +17,19 @@ A simple banking service
 2. Modify the Makefile in the project root, and set your `DB_URL` and `PORT`
 3. To run, `make run`
 3. To build `make build`
+
+
+# interaction
+```
+curl --location 'localhost:6554/users' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "email": "2@gmail.com"
+}'
+
+curl --location 'localhost:6554/accounts' \
+--header 'Content-Type: application/json' \
+--data '{
+    "user_id": 3
+}'
+```

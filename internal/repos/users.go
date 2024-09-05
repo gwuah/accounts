@@ -59,13 +59,12 @@ func (r *usersRepo) GetByID(ctx context.Context, tx *sql.Tx, userID int) (*model
 }
 
 func (r *usersRepo) Create(ctx context.Context, tx *sql.Tx, u *models.User) error {
-	query := `insert into users (email) values ($1);`
+	query := `insert into users (email) values ($1) returning id, created_at, updated_at;`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(u.Email)
-	return err
+	return stmt.QueryRow(u.Email).Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
 }

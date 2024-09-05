@@ -41,24 +41,24 @@ func writeBadRequest(w http.ResponseWriter, err error) {
 	if err == nil {
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
 	})
 }
 
 func writeInternalServer(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusInternalServerError)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusInternalServerError)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": msg,
 	})
 }
 
 func writeOk(w http.ResponseWriter, data map[string]interface{}) {
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
 }
 
@@ -82,26 +82,32 @@ func createUser(global *slog.Logger, userRepo UserRepository) http.HandlerFunc {
 		if err != nil {
 			logger.Error("failed to acquire transaction", "err", err)
 			writeInternalServer(w, "failed to create user")
+			return
 		}
 
-		err = userRepo.Create(r.Context(), tx, &models.User{
+		user := &models.User{
 			Email: req.Email,
-		})
+		}
+		err = userRepo.Create(r.Context(), tx, user)
 		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value") && strings.Contains(err.Error(), "users_email_key") {
+				writeBadRequest(w, errors.New("email already taken"))
+				return
+			}
 			logger.Error("failed to create user", "err", err)
 			writeInternalServer(w, "failed to create user")
+			return
 		}
 
 		err = tx.Commit()
 		if err != nil {
 			logger.Error("failed to commit tx", "err", err)
 			writeInternalServer(w, "failed to create user")
+			return
 		}
 
 		writeOk(w, map[string]interface{}{
-			"user": &models.User{
-				Email: req.Email,
-			},
+			"user": user,
 		})
 	}
 }
@@ -115,18 +121,21 @@ func findUser(global *slog.Logger, userRepo UserRepository, accountRepo AccountR
 		if err != nil {
 			logger.Error("failed to acquire transaction", "err", err)
 			writeInternalServer(w, "failed to get user")
+			return
 		}
 
 		user, err := userRepo.GetByID(r.Context(), tx, stringToInt(id))
 		if err != nil {
 			logger.Error("failed to get user", "err", err)
 			writeInternalServer(w, "failed to get user")
+			return
 		}
 
 		err = tx.Commit()
 		if err != nil {
 			logger.Error("failed to commit tx", "err", err)
 			writeInternalServer(w, "failed to get user")
+			return
 		}
 
 		writeOk(w, map[string]interface{}{

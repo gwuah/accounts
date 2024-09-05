@@ -28,7 +28,7 @@ func requestLogger(next http.Handler, logger *slog.Logger) http.Handler {
 			"method", r.Method,
 			"path", path,
 			"timestamp", start,
-			"duration", time.Since(start),
+			"duration", time.Since(start).String(),
 		)
 	})
 }
@@ -101,7 +101,7 @@ func main() {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", cfg.PORT))
 	if err != nil {
-		logger.Error("failed to setup tcp listener for service", "err", err)
+		logger.Error("failed to setup tcp listener for svc", "err", err)
 		os.Exit(1)
 	}
 

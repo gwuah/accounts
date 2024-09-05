@@ -59,13 +59,17 @@ func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) 
 }
 
 func (r *accountsRepo) Create(ctx context.Context, tx *sql.Tx, a *models.Account) error {
-	query := `insert into accounts (user_id, account_number) values ($1, $2);`
+	query := `insert into accounts (user_id, account_number) values ($1, $2) returning id, created_at, updated_at;`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(a.UserID, a.AccountNumber)
+	err = stmt.QueryRow(a.UserID, a.AccountNumber).Scan(&a.ID, &a.CreatedAt, &a.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
 	return err
 }

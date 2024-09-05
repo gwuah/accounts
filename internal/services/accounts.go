@@ -64,18 +64,21 @@ func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo 
 		if err != nil {
 			logger.Error("failed to acquire transaction", "err", err)
 			writeInternalServer(w, "failed to create account")
+			return
 		}
 
 		err = accountRepo.Create(r.Context(), tx, account)
 		if err != nil {
-			logger.Error("failed to create user", "err", err)
-			writeInternalServer(w, "failed to create user")
+			logger.Error("failed to create account", "err", err)
+			writeInternalServer(w, "failed to create account")
+			return
 		}
 
 		err = tx.Commit()
 		if err != nil {
 			logger.Error("failed to commit tx", "err", err)
 			writeInternalServer(w, "failed to create account")
+			return
 		}
 
 		writeOk(w, map[string]interface{}{
