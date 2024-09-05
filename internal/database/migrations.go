@@ -55,6 +55,9 @@ var (
 			"create_unique_transaction_lines_index",
 			"create unique index transaction_lines_unique_idx on transaction_lines(transaction_id, account_id);",
 		),
+		execsql(
+			"disable_updates_on_transaction_lines", "CREATE RULE no_updates_on_transaction_lines AS ON UPDATE TO transaction_lines DO INSTEAD NOTHING;",
+		),
 	)
 	sqliteMigrations = migrator.Migrations()
 )

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/gwuah/accounts/internal/models"
@@ -110,7 +111,15 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 		err = transactionRepo.Create(r.Context(), tx, transaction)
 		if err != nil {
 			tx.Rollback()
-			logger.Error("failed to create db transaction", "err", err)
+			if strings.Contains(err.Error(), "duplicate key value") && strings.Contains(err.Error(), "transactions_reference_key") {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusConflict)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": "duplicate transaction request",
+				})
+				return
+			}
+			logger.Error("failed to create payment transaction", "err", err)
 			writeInternalServer(w, "failed to create transaction")
 			return
 		}
@@ -118,20 +127,38 @@ func createTransaction(global *slog.Logger, accountRepo AccountRepository, userR
 		// before performing this debit/credit, we need to verify if the origin account has enough balance for this transaction.
 		// we however exclude the genesis account, which has an account number of 0, since it's a special account that only hold risks.
 		if req.From != GenesisAccountNumber {
-			// perform balance checks
+			account := getAccountByAccountNumber(accounts, req.From)
+			balance, err := transactionRepo.GetBalance(r.Context(), tx, account.ID)
+			if err != nil {
+				tx.Rollback()
+				logger.Error("failed to get balance", "err", err)
+				writeInternalServer(w, "failed to create transaction")
+				return
+			}
+
+			if balance < int64(req.Amount) {
+				tx.Rollback()
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": "insufficient balance",
+				})
+				return
+			}
+
 		}
 
 		debit := models.TransactionLine{
 			TransactionID: transaction.ID,
 			AccountID:     getAccountByAccountNumber(accounts, req.From).ID,
-			Amount:        req.Amount,
+			Amount:        req.Amount * 100,
 			Purpose:       string(repos.DEBIT),
 		}
 
 		credit := models.TransactionLine{
 			TransactionID: transaction.ID,
 			AccountID:     getAccountByAccountNumber(accounts, req.To).ID,
-			Amount:        req.Amount,
+			Amount:        req.Amount * 100,
 			Purpose:       string(repos.CREDIT),
 		}
 

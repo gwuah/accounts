@@ -117,7 +117,7 @@ func getAccount(global *slog.Logger, accountRepo AccountRepository, userRepo Use
 			return
 		}
 
-		account.Balance = balance
+		account.Balance = balance / 100
 
 		writeOk(w, map[string]interface{}{
 			"account": account,
