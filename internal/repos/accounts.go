@@ -37,6 +37,26 @@ func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) 
 		return nil, fmt.Errorf("failed to exec query. %w", err)
 	}
 
+	return getMany(rows)
+}
+
+func (r *accountsRepo) GetAccounts(ctx context.Context, tx *sql.Tx, accountNumbers []string) ([]*models.Account, error) {
+	// refactor: getAccounts should support multiple inputs, not just the first 2
+	stmt, err := tx.Prepare("select id, user_id, account_number, created_at, updated_at from accounts where account_number in ($1, $2);")
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement. %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, accountNumbers[0], accountNumbers[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to exec query. %w", err)
+	}
+
+	return getMany(rows)
+}
+
+func getMany(rows *sql.Rows) ([]*models.Account, error) {
 	var out []*models.Account
 	for rows.Next() {
 		var a models.Account
@@ -54,7 +74,6 @@ func (r *accountsRepo) GetByUserID(ctx context.Context, tx *sql.Tx, userID int) 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("failed to scan response. %w", err)
 	}
-
 	return out, nil
 }
 

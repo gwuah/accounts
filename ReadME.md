@@ -32,4 +32,13 @@ curl --location 'localhost:6554/accounts' \
 --data '{
     "user_id": 3
 }'
+
+curl --location 'localhost:6554/transactions' \
+--header 'Content-Type: application/json' \
+--data '{
+    "from": "810093581",
+    "to": "985270462",
+    "amount": 100,
+    "reference": "lekkero"
+}'
 ```

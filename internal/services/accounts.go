@@ -18,6 +18,7 @@ import (
 type AccountRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	Create(ctx context.Context, tx *sql.Tx, a *models.Account) error
+	GetAccounts(ctx context.Context, tx *sql.Tx, accountNumbers []string) ([]*models.Account, error)
 }
 
 type createAccountRequest struct {
@@ -87,6 +88,45 @@ func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo 
 	}
 }
 
-func AddAccountRoutes(logger *slog.Logger, r *mux.Router, accountRepo AccountRepository, userRepo UserRepository) {
+func getAccount(global *slog.Logger, accountRepo AccountRepository, userRepo UserRepository, transactionRepo TransactionRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		logger := global.With("entity", "users")
+		accountNumber := mux.Vars(r)["accountNumber"]
+
+		tx, err := userRepo.GetTx(r.Context())
+		if err != nil {
+			logger.Error("failed to acquire transaction", "err", err)
+			writeInternalServer(w, "failed to get account")
+			return
+		}
+
+		accounts, err := accountRepo.GetAccounts(r.Context(), tx, []string{accountNumber, GenesisAccountNumber})
+		if err != nil {
+			logger.Error("failed to get accounts", "err", err)
+			writeInternalServer(w, "failed to get accounts")
+			return
+		}
+
+		account := getAccountByAccountNumber(accounts, accountNumber)
+
+		balance, err := transactionRepo.GetBalance(r.Context(), tx, account.ID)
+		if err != nil {
+			logger.Error("failed to get accounts", "err", err)
+			writeInternalServer(w, "failed to get accounts")
+			return
+		}
+
+		account.Balance = balance
+
+		writeOk(w, map[string]interface{}{
+			"account": account,
+		})
+	}
+}
+
+func AddAccountRoutes(logger *slog.Logger, r *mux.Router, accountRepo AccountRepository, userRepo UserRepository, transactionRepo TransactionRepository) {
 	r.Methods("POST").Path("/accounts").HandlerFunc(createAccount(logger, accountRepo, userRepo))
+	r.Methods("GET").Path("/accounts/{accountNumber}").HandlerFunc(getAccount(logger, accountRepo, userRepo, transactionRepo))
+
 }

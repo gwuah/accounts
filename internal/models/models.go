@@ -13,6 +13,8 @@ type Account struct {
 	Model
 	UserID        int    `json:"user_id"`
 	AccountNumber string `json:"account_number"`
+
+	Balance int64 `json:"balance"`
 }
 
 type Transaction struct {
@@ -22,9 +24,10 @@ type Transaction struct {
 
 type TransactionLine struct {
 	Model
-	TransactionID int `json:"transaction_id"`
-	AccountID     int `json:"account_id"`
-	Amount        int `json:"amount"`
+	TransactionID int    `json:"transaction_id"`
+	AccountID     int    `json:"account_id"`
+	Amount        int    `json:"amount"`
+	Purpose       string `json:"purpose"`
 }
 
 type User struct {

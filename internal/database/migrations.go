@@ -22,7 +22,7 @@ var (
 			`create table if not exists accounts (
 				id SERIAL PRIMARY KEY,
 				user_id INTEGER NOT NULL,
-				account_number INTEGER UNIQUE NOT NULL,
+				account_number VARCHAR(100) UNIQUE NOT NULL,
 				created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -42,9 +42,9 @@ var (
 			`create table if not exists transaction_lines (
 				id SERIAL PRIMARY KEY,
 				transaction_id INTEGER NOT NULL,
-				reference VARCHAR(100) NOT NULL,
 				account_id INTEGER NOT NULL,
 				amount INTEGER NOT NULL,
+				purpose VARCHAR(50) NOT NULL,
 				created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,

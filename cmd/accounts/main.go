@@ -81,7 +81,7 @@ func main() {
 	}
 	ar := repos.NewAccount(logger, db.Instance())
 	ur := repos.NewUsers(logger, db.Instance())
-	// tr := repos.NewTransactions(logger, db.Instance())
+	tr := repos.NewTransactions(logger, db.Instance())
 
 	r := mux.NewRouter()
 	r.Use(func(h http.Handler) http.Handler {
@@ -92,8 +92,8 @@ func main() {
 	})
 
 	services.AddUserRoutes(logger, r, ar, ur)
-	services.AddAccountRoutes(logger, r, ar, ur)
-	// services.AddTransactionRoutes(logger, r, ar, ur, tr)
+	services.AddAccountRoutes(logger, r, ar, ur, tr)
+	services.AddTransactionRoutes(logger, r, ar, ur, tr)
 
 	server := &http.Server{
 		Handler: r,
