@@ -1,23 +1,24 @@
 # accounts
-simple banking service
+simple banking service 
 
 # features
 - accounts
 - add money to account
 - transfer money between accounts
 
-# todo
-- write tests for core functionality
-- verify error messages and transaction usage
-
 # considerations 
-- Disable updates on transaction_lines table
+- Disable updates & deletes on transaction_lines table
 - Every transaction results in a debit and credit
-- Store lowest form of values (cents)
-- Perform balance checks before transacting between accounts
-- Deposits debit genesis account, whose balance represents total risk.
-- Using currency USD with 2 decimal places of precision
-- Use transaction references to prevent duplicate transactions (idempotency key)
+- We store lowest form of values (cents)
+- We perform balance checks before transacting between accounts
+- Deposits debit genesis account, whose balance represents total risk
+- We assume currency USD with 2 decimal places of precision
+- We use transaction references to prevent duplicate transactions (idempotency key)
+
+# improvements
+- async processing of transactions
+- support for multiple currencies
+- robust user authn & authz
 
 # setup
 #### using docker (easier)
@@ -65,4 +66,8 @@ curl --location 'localhost:6554/transactions' \
     "reference": "lekkero"
 }'
 
+curl --location 'localhost:6554/accounts/715733003'
 ```
+
+# notes
+This is an improvement on [cashapp](https://github.com/gwuah/cashapp), which I wrote 4 years ago. Code is much cleaner to follow & easier to extend. It also has quite good test coverage.
