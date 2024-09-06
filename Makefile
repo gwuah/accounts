@@ -10,3 +10,6 @@ build:
 
 run: 
 	DB_URL=$(DB_URL) PORT=$(PORT) go run cmd/accounts/main.go
+
+test: 
+	go test ./...

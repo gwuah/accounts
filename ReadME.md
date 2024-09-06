@@ -30,24 +30,25 @@ simple banking service
 1. Ensure you have a postgres db setup with the right dbname, user, password and sslmode.
 2. Modify the Makefile in the project root, and set your `DB_URL` and `PORT`
 3. To run, `make run`
-3. To build `make build`
+4. To build `make build`
+5. To test `make test`
 
 
 # interactions
 ```
-curl --location 'localhost:6554/users' \
+curl --location 'localhost:8080/users' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "email": "1@gmail.com"
 }'
 
-curl --location 'localhost:6554/accounts' \
+curl --location 'localhost:8080/accounts' \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id": 5
 }'
 
-curl --location 'localhost:6554/transactions' \
+curl --location 'localhost:8080/transactions' \
 --header 'Content-Type: application/json' \
 --data '{
     "to": "985270462",
@@ -56,7 +57,7 @@ curl --location 'localhost:6554/transactions' \
     "reference": "ok"
 }'
 
-curl --location 'localhost:6554/transactions' \
+curl --location 'localhost:8080/transactions' \
 --header 'Content-Type: application/json' \
 --data '{
     "from": "810093581",
@@ -66,7 +67,7 @@ curl --location 'localhost:6554/transactions' \
     "reference": "lekkero"
 }'
 
-curl --location 'localhost:6554/accounts/715733003'
+curl --location 'localhost:8080/accounts/715733003'
 ```
 
 # notes
