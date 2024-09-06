@@ -68,6 +68,13 @@ func createAccount(global *slog.Logger, accountRepo AccountRepository, userRepo 
 			return
 		}
 
+		err = tx.Commit()
+		if err != nil {
+			logger.Error("failed to commit transaction", "err", err)
+			writeInternalServer(w, "failed to create account")
+			return
+		}
+
 		writeOk(w, map[string]interface{}{
 			"account": account,
 		})

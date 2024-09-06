@@ -6,8 +6,9 @@ import (
 	"errors"
 
 	"github.com/gwuah/accounts/internal/config"
-	_ "github.com/lib/pq" // Import the PostgreSQL driver
+	_ "github.com/lib/pq"
 	"github.com/lopezator/migrator"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -64,7 +65,7 @@ func pqconn(ctx context.Context, url string, opts ...migrator.Option) (*sql.DB, 
 }
 
 func liteconn(ctx context.Context, url string, opts ...migrator.Option) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", url)
+	db, err := sql.Open("sqlite3", url)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/lopezator/migrator v0.3.1
+	github.com/mattn/go-sqlite3 v1.14.23
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.7.0
 )
