@@ -1,5 +1,5 @@
 # accounts
-simple banking service 
+core banking service 
 
 # features
 - accounts
