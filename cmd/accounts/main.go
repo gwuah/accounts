@@ -58,7 +58,7 @@ func runSeeds(db *sql.DB) error {
 
 func main() {
 	doneCh := make(chan os.Signal, 1)
-	signal.Notify(doneCh, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+	signal.Notify(doneCh, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-doneCh
